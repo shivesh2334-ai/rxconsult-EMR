@@ -1,0 +1,34 @@
+name: Unpack application
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - rxconsult.zip
+      - .github/workflows/unpack.yml
+permissions:
+  contents: write
+jobs:
+  unpack:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unpack app into repository root
+        run: |
+          rm -rf .unpack
+          mkdir .unpack
+          unzip -q -o rxconsult.zip -d .unpack
+          shopt -s dotglob
+          if [ -d .unpack/rxconsult ]; then
+            cp -R .unpack/rxconsult/* .
+          else
+            cp -R .unpack/* .
+          fi
+          rm -rf .unpack
+      - name: Commit unpacked application
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .
+          git diff --cached --quiet && exit 0
+          git commit -m "Unpack RxConsult application for Vercel"
+          git push
